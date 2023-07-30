@@ -319,7 +319,7 @@ class ImageCropperApp:
         return True
         
     def install_newversion(self):
-        update_url = f"https://github.com/OneDefauter/Juntar-Imagens/archive/refs/tags/{latest_version}.zip"
+        update_url = f"https://github.com/OneDefauter/Cortar-Imagens/archive/refs/tags/{latest_version}.zip"
         response = requests.get(update_url)
         response.raise_for_status()
         if os.path.exists(f"{latest_version}.zip"):
@@ -330,12 +330,14 @@ class ImageCropperApp:
         with zipfile.ZipFile(f"{latest_version}.zip", 'r') as zip_ref:
             zip_ref.extractall()
 
-        if os.path.exists(f"Juntar-Imagens-{latest_version.replace('v', '')}/.gitignore"):
-            os.remove(f"Juntar-Imagens-{latest_version.replace('v', '')}/.gitignore")
-        os.remove(f"Juntar-Imagens-{latest_version.replace('v', '')}/app.py")
+        if os.path.exists(f"Cortar-Imagens-{latest_version.replace('v', '')}/.gitignore"):
+            os.remove(f"Cortar-Imagens-{latest_version.replace('v', '')}/.gitignore")
+        if os.path.exists(f"Cortar-Imagens-{latest_version.replace('v', '')}/README.md"):
+            os.remove(f"Cortar-Imagens-{latest_version.replace('v', '')}/README.md")
+        os.remove(f"Cortar-Imagens-{latest_version.replace('v', '')}/app.py")
         os.remove("app.exe")
-        shutil.move(f"Juntar-Imagens-{latest_version.replace('v', '')}/app.exe", self.current_dir)
-        os.removedirs(f"Juntar-Imagens-{latest_version.replace('v', '')}")
+        shutil.move(f"Cortar-Imagens-{latest_version.replace('v', '')}/app.exe", self.current_dir)
+        os.removedirs(f"Cortar-Imagens-{latest_version.replace('v', '')}")
 
 if __name__ == "__main__":
     root = tk.Tk()
