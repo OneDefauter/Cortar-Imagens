@@ -233,8 +233,7 @@ class ImageCropperApp:
         
         backup = self.backup_var.get()
 
-        file_list = [f for f in os.listdir(self.image_folder) if os.path.isfile(os.path.join(self.image_folder, f))]
-        file_list.sort()
+        file_list = sorted([f for f in os.listdir(self.image_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg'))], key=lambda x: [int(c) if c.isdigit() else c for c in re.split(r'(\d+)', x)])
 
         if backup:
             backup_path = os.path.join(self.image_folder, "Backup")
@@ -253,8 +252,7 @@ class ImageCropperApp:
             new_filename = f"{base}__{ext}"
             os.rename(os.path.join(self.image_folder, filename), os.path.join(self.image_folder, new_filename))
 
-        file_list = [f for f in os.listdir(self.image_folder) if os.path.isfile(os.path.join(self.image_folder, f))]
-        file_list.sort()
+        file_list = sorted([f for f in os.listdir(self.image_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg'))], key=lambda x: [int(c) if c.isdigit() else c for c in re.split(r'(\d+)', x)])
 
         for filename in file_list:
             base, ext = os.path.splitext(filename)
