@@ -1,3 +1,4 @@
+import hashlib
 import os
 import shutil
 import subprocess
@@ -18,16 +19,58 @@ sistema_operacional = platform.system()
 if sistema_operacional != 'Windows':
     os.exit()
 
-GITHUB_REPO = "https://api.github.com/repos/OneDefauter/Cortar-Imagens"
-version = "v1.0"
+version = "v1.1"
+owner = "OneDefauter"  # Substitua pelo nome do usuário do repositório
+repo = "Cortar-Imagens"  # Substitua pelo nome do repositório
+branch = "main"  # Substitua pela branch desejada
+file_path = "Cortar%20Imagens.exe"  # Caminho do arquivo que você deseja atualizar (pode ser um caminho completo se estiver em subpastas)
+output_path = os.path.basename(__file__)  # Caminho para onde você deseja salvar o arquivo baixado
+
+def calculate_file_hash(file_path):
+    sha256_hash = hashlib.sha256()
+    with open(file_path, "rb") as file:
+        # Leitura do arquivo em blocos para tratar arquivos grandes
+        for byte_block in iter(lambda: file.read(4096), b""):
+            sha256_hash.update(byte_block)
+    return sha256_hash.hexdigest()
 
 try:
-    response = requests.get(f"{GITHUB_REPO}/releases/latest")
-    response.raise_for_status()
-    latest_version = response.json()["tag_name"]
-except requests.exceptions.RequestException as e:
-    print(f"Erro ao verificar atualizações: {e}")
-    latest_version = None
+    base_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{file_path}"
+    response = requests.get(base_url)
+
+    if response.status_code == 200:
+        new_content = response.content
+
+        current_hash = calculate_file_hash(output_path)
+        new_hash = hashlib.sha256(new_content).hexdigest()
+    else:
+        new_content = None
+        print(f"Erro ao obter o arquivo {file_path}.\nStatus code: {response.status_code}")
+
+except Exception as e:
+    new_content = None
+    print(e)
+
+def download_file_from_github(owner, repo, branch, file_path, output_path):
+    base_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{file_path}"
+    response = requests.get(base_url)
+
+    if response.status_code == 200:
+        new_content = response.content
+
+        current_hash = calculate_file_hash(output_path)
+        new_hash = hashlib.sha256(new_content).hexdigest()
+
+        if current_hash != new_hash:
+            with open(output_path, "wb") as file:
+                file.write(new_content)
+            print(f"Arquivo {file_path} atualizado em {output_path}")
+        else:
+            print(f"O arquivo {file_path} já está atualizado.")
+    else:
+        print(f"Erro ao obter o arquivo {file_path}. Status code: {response.status_code}")
+
+
 
 class ImageCropperApp:
     def __init__(self, root):
@@ -306,39 +349,16 @@ class ImageCropperApp:
                 print("A instalação foi cancelada pelo usuário.")
                 os.exit()
 
-    def show_update_dialog(self):
-        if messagebox.askyesno("Nova Atualização", f"Tem uma nova atualização.\nVersão atual: {version}\nVersão mais recente: {latest_version}\nDeseja atualizar agora?"):
-            self.install_newversion()
-            messagebox.showinfo("Atualização Concluída", "A atualização foi concluída com sucesso!")
-            self.root.destroy()
-
     def check_for_updates(self):
-        if latest_version is not None:
-            if version != latest_version:
-                self.show_update_dialog()
+        if new_content is not None:
+            if current_hash != new_hash:
+                if messagebox.askyesno("Nova Atualização", f"Tem uma nova atualização.\nDeseja atualizar agora?"):
+                    with open(output_path, "wb") as file:
+                        file.write(new_content)
+                    messagebox.showinfo("Atualização Concluída", "A atualização foi concluída com sucesso!")
+                    self.root.destroy()
         return True
         
-    def install_newversion(self):
-        update_url = f"https://github.com/OneDefauter/Cortar-Imagens/archive/refs/tags/{latest_version}.zip"
-        response = requests.get(update_url)
-        response.raise_for_status()
-        if os.path.exists(f"{latest_version}.zip"):
-            os.remove(f"{latest_version}.zip")
-        with open(f"{latest_version}.zip", "wb") as f:
-            f.write(response.content)
-
-        with zipfile.ZipFile(f"{latest_version}.zip", 'r') as zip_ref:
-            zip_ref.extractall()
-
-        if os.path.exists(f"Cortar-Imagens-{latest_version.replace('v', '')}/.gitignore"):
-            os.remove(f"Cortar-Imagens-{latest_version.replace('v', '')}/.gitignore")
-        if os.path.exists(f"Cortar-Imagens-{latest_version.replace('v', '')}/README.md"):
-            os.remove(f"Cortar-Imagens-{latest_version.replace('v', '')}/README.md")
-        os.remove(f"Cortar-Imagens-{latest_version.replace('v', '')}/app.py")
-        os.remove("app.exe")
-        shutil.move(f"Cortar-Imagens-{latest_version.replace('v', '')}/app.exe", self.current_dir)
-        os.removedirs(f"Cortar-Imagens-{latest_version.replace('v', '')}")
-
 if __name__ == "__main__":
     root = tk.Tk()
     app = ImageCropperApp(root)
